@@ -563,6 +563,9 @@ exynos4210_bus_ioctl(struct uart_softc *sc, int request, intptr_t data)
 static struct ofw_compat_data compat_data[] = {
 	{"apple,s5l-uart",		(uintptr_t)&uart_s5l_class.base},
 	{"samsung,exynos4210-uart",	(uintptr_t)&uart_ex4210_class.base},
+	/* Google Tensor SoCs wrap an exynos4210-compatible UART in a USI. */
+	{"google,gs101-uart",		(uintptr_t)&uart_ex4210_class.base},
+	{"google,zuma-uart",		(uintptr_t)&uart_ex4210_class.base},
 	{NULL,			(uintptr_t)NULL},
 };
 UART_FDT_CLASS_AND_DEVICE(compat_data);

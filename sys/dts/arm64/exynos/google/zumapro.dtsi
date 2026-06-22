@@ -19,6 +19,10 @@
 	#address-cells = <2>;
 	#size-cells = <1>;
 
+	aliases {
+		serial0 = &serial_0;
+	};
+
 	chosen {
 		/*
 		 * The stock bootloader crashes if /chosen has no "bootargs",
@@ -29,6 +33,7 @@
 		 * this SoC, so it never gates those resources to begin with.
 		 */
 		bootargs = "";
+		stdout-path = "serial0:115200n8";
 	};
 
 	cpus {
@@ -200,6 +205,18 @@
 			reg = <0x10400000 0x10000>,	/* GICD */
 			      <0x10440000 0x100000>;	/* GICR * 8 */
 			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH 0>;
+		};
+
+		/*
+		 * Debug UART (USI8 in UART mode).  The exynos4210-compatible
+		 * UART is wrapped in a USI block; the USI mode and the gating
+		 * clocks are left configured by the bootloader, so the UART is
+		 * described directly here rather than under a USI node.
+		 */
+		serial_0: serial@10870000 {
+			compatible = "google,gs101-uart";
+			reg = <0x10870000 0xc0>;
+			interrupts = <GIC_SPI 641 IRQ_TYPE_LEVEL_HIGH>;
 		};
 	};
 };

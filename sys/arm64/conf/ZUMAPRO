@@ -1,0 +1,65 @@
+#
+# ZUMAPRO -- Fully integrated kernel for Google Tensor G4 (zumapro) phones.
+#
+# Pixel 9 family: caiman, comet, komodo, tegu, tokay.
+#
+# This is a focused, statically linked kernel: every driver is compiled
+# into the kernel image and no loadable kernel modules are built (only the
+# device tree blobs are produced, via MODULES_OVERRIDE below).  It is the
+# FreeBSD analogue of arch/arm64/configs/zumapro_defconfig, restricted to
+# the subset that FreeBSD currently supports on this SoC.
+#
+
+cpu		ARM64
+ident		ZUMAPRO
+
+#
+# Generic ARM64 base: scheduler, VM, networking, filesystems, debugger,
+# and the standard device set (PCI, GPIO/pinctrl, I2C, SPI, UART, vt with
+# vt_simplefb, USB, MMC, HID, crypto, clk/phy/regulator/syscon, evdev...).
+#
+include 	"std.arm64"
+include 	"std.dev"
+
+#
+# Google Tensor (Samsung Exynos derived) SoC support: enables FDT, the
+# exynos UART, and builds the dtb/exynos device trees.
+#
+include 	"std.exynos"
+
+#
+# Fully integrated kernel: do not build any loadable driver modules.
+# Restrict the module build to just the device tree blobs so the boards'
+# *.dtb files are still produced for the bootloader to load.
+#
+makeoptions	MODULES_OVERRIDE="dtb/exynos"
+
+#
+# Always build the U-Boot booti image (kernel.bin) alongside the ELF, so it
+# is produced without needing WITH_KERNEL_BIN on the command line.  This is
+# the flat kernel with the arm64 Linux image header prepended, suitable for
+# the U-Boot "booti" command.
+#
+makeoptions	WITH_KERNEL_BIN=1
+
+#
+# Bring-up convenience.  Storage (UFS) is not supported on this SoC yet, so
+# the practical root device is an embedded or loader-supplied memory disk.
+# MD_ROOT is already enabled by std.arm64; FUSEFS rounds out the userspace
+# filesystem options present in the Linux defconfig (FUSE/CUSE).
+#
+options 	FUSEFS			# FUSE userspace filesystems
+
+#
+# USB 3.0 device controller used by this SoC (CONFIG_USB_DWC3).  Harmless
+# until the USB PHY and DWC3 nodes are described in the device tree.
+#
+device		dwc3			# Synopsys DesignWare USB3 controller
+
+#
+# Not yet supported on FreeBSD for this SoC, and therefore intentionally
+# absent (present in the Linux defconfig): the Samsung CMU clock and
+# pinctrl drivers, the USI serial bus, the S2MPG PMIC/regulators, the
+# Exynos UFS host and PHY, the Exynos DRM/DECON display pipeline, the Mali
+# (Panthor) GPU, the System MMU (IOMMU), and ACPM/SCMI power management.
+#

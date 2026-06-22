@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/*
+ * Google Pixel 9 Pro XL (komodo).
+ *
+ * Copyright 2025 Trijal Saha <trijalsaha2012@gmail.com>
+ */
+
+/dts-v1/;
+
+#include "zumapro.dtsi"
+
+/ {
+	model = "Google Pixel 9 Pro XL (komodo)";
+	compatible = "google,komodo", "google,zumapro-komodo", "google,zumapro";
+};

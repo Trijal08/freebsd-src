@@ -1,0 +1,177 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/*
+ * Google Tensor G4 "zumapro" SoC.
+ *
+ * Minimal FreeBSD support: CPUs, PSCI, the GICv3 interrupt controller and
+ * the ARM architected timer.  These are all handled by FreeBSD's generic
+ * arm64 drivers.  SoC-specific clock (CMU), pinctrl and USI support is not
+ * present yet; peripherals depend on the configuration left in place by the
+ * bootloader.
+ *
+ * Copyright 2025 Trijal Saha <trijalsaha2012@gmail.com>
+ */
+
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+/ {
+	compatible = "google,zumapro", "google,gs101";
+	interrupt-parent = <&gic>;
+	#address-cells = <2>;
+	#size-cells = <1>;
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu-map {
+			cluster0 {
+				core0 { cpu = <&cpu0>; };
+				core1 { cpu = <&cpu1>; };
+				core2 { cpu = <&cpu2>; };
+				core3 { cpu = <&cpu3>; };
+			};
+
+			cluster1 {
+				core0 { cpu = <&cpu4>; };
+				core1 { cpu = <&cpu5>; };
+				core2 { cpu = <&cpu6>; };
+			};
+
+			cluster2 {
+				core0 { cpu = <&cpu7>; };
+			};
+		};
+
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a520";
+			reg = <0x0000>;
+			enable-method = "psci";
+		};
+
+		cpu1: cpu@100 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a520";
+			reg = <0x0100>;
+			enable-method = "psci";
+		};
+
+		cpu2: cpu@200 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a520";
+			reg = <0x0200>;
+			enable-method = "psci";
+		};
+
+		cpu3: cpu@300 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a520";
+			reg = <0x0300>;
+			enable-method = "psci";
+		};
+
+		cpu4: cpu@400 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a720";
+			reg = <0x0400>;
+			enable-method = "psci";
+		};
+
+		cpu5: cpu@500 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a720";
+			reg = <0x0500>;
+			enable-method = "psci";
+		};
+
+		cpu6: cpu@600 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a720";
+			reg = <0x0600>;
+			enable-method = "psci";
+		};
+
+		cpu7: cpu@700 {
+			device_type = "cpu";
+			compatible = "arm,cortex-x4";
+			reg = <0x0700>;
+			enable-method = "psci";
+		};
+	};
+
+	psci {
+		compatible = "arm,psci-1.0";
+		method = "smc";
+	};
+
+	timer {
+		compatible = "arm,armv8-timer";
+		interrupts =
+		    <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW) 0>,
+		    <GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW) 0>,
+		    <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW) 0>,
+		    <GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW) 0>;
+	};
+
+	/*
+	 * Firmware and TrustZone carve-outs.  These must not be used by the
+	 * kernel; they are reserved by the secure firmware and the bootloader.
+	 */
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <1>;
+		ranges;
+
+		gsa_reserved_protected: gsa@90200000 {
+			reg = <0x0 0x90200000 0x003ff000>;
+			no-map;
+		};
+
+		tpu_fw_reserved: tpu-fw@92e00000 {
+			reg = <0x0 0x92e00000 0x01200000>;
+			no-map;
+		};
+
+		aoc_reserved: aoc@94000000 {
+			reg = <0x0 0x94000000 0x03000000>;
+			no-map;
+		};
+
+		dss_log_reserved: dss-log@fd3f0000 {
+			reg = <0x0 0xfd3f0000 0x0000e000>;
+			no-map;
+		};
+
+		debug_kinfo_reserved: debug-kinfo@fd3fe000 {
+			reg = <0x0 0xfd3fe000 0x00001000>;
+			no-map;
+		};
+
+		bldr_log_reserved: bldr-log@fd800000 {
+			reg = <0x0 0xfd800000 0x00100000>;
+			no-map;
+		};
+	};
+
+	soc: soc@0 {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x0 0x0 0x0 0x40000000>;
+
+		gic: interrupt-controller@10400000 {
+			compatible = "arm,gic-v3";
+			/*
+			 * Four-cell binding to match the upstream Linux DTS.
+			 * FreeBSD's gic_v3 driver uses the first three cells
+			 * (type, number, flags) and ignores the fourth (the PPI
+			 * partition index), which it does not implement.
+			 */
+			#interrupt-cells = <4>;
+			interrupt-controller;
+			reg = <0x10400000 0x10000>,	/* GICD */
+			      <0x10440000 0x100000>;	/* GICR * 8 */
+			interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH 0>;
+		};
+	};
+};

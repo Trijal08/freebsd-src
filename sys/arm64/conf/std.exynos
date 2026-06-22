@@ -1,0 +1,7 @@
+#
+# Google Tensor (Samsung Exynos derived) SoC support
+#
+
+options 	FDT
+
+makeoptions	MODULES_EXTRA+="dtb/exynos"

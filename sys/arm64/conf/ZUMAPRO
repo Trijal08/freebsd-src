@@ -43,6 +43,16 @@ makeoptions	MODULES_OVERRIDE="dtb/exynos"
 makeoptions	WITH_KERNEL_BIN=1
 
 #
+# Early console for bring-up.  EARLY_PRINTF=exynos routes printf(9) through a
+# polled write to the debug UART before the real console is configured, so
+# panics and hangs that happen before cninit() are still visible.  SOCDEV_PA
+# is the physical base of that UART (serial_0 / USI8 at 0x10870000), mapped
+# early to socdev_va.  Comment both out once the console is known good.
+#
+options 	SOCDEV_PA=0x10870000
+options 	EARLY_PRINTF=exynos
+
+#
 # Bring-up convenience.  Storage (UFS) is not supported on this SoC yet, so
 # the practical root device is an embedded or loader-supplied memory disk.
 # MD_ROOT is already enabled by std.arm64; FUSEFS rounds out the userspace

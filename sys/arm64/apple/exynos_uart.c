@@ -36,6 +36,7 @@
 #include <sys/rman.h>
 #include <machine/bus.h>
 #include <machine/intr.h>
+#include <machine/machdep.h>
 
 #include <dev/uart/uart.h>
 #include <dev/uart/uart_cpu.h>
@@ -273,6 +274,27 @@ exynos4210_term(struct uart_bas *bas)
 {
 	/* XXX */
 }
+
+#if CHECK_EARLY_PRINTF(exynos)
+/*
+ * Early console putc, used before the real console is configured (selected
+ * with "options EARLY_PRINTF=exynos").  The UART physical base is given by
+ * SOCDEV_PA and mapped to socdev_va in early boot.  Only the UTRSTAT/UTXH
+ * registers are touched, so this works for any exynos4210-compatible UART
+ * the bootloader has already configured.
+ */
+static void
+exynos_early_putc(int c)
+{
+	volatile uint32_t *utrstat = (uint32_t *)(socdev_va + SSCOM_UTRSTAT);
+	volatile uint32_t *utxh = (uint32_t *)(socdev_va + SSCOM_UTXH);
+
+	while ((*utrstat & UTRSTAT_TXEMPTY) == 0)
+		;
+	*utxh = c & 0xff;
+}
+early_putc_t *early_putc = exynos_early_putc;
+#endif /* CHECK_EARLY_PRINTF */
 
 static void
 exynos4210_putc(struct uart_bas *bas, int c)

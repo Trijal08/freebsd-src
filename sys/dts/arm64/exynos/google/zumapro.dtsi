@@ -36,6 +36,21 @@
 		 */
 		bootargs = "FreeBSD:-D";
 		stdout-path = "serial0:115200n8";
+		
+		/*
+		 * Framebuffer set up by the bootloader.  FreeBSD's vt_simplefb
+		 * driver takes the base address from "reg" (it does not follow
+		 * the Linux "memory-region" phandle), so the splash buffer is
+		 * described directly here and reserved below.  The per-board
+		 * geometry (width, height, stride) is filled in and the node is
+		 * enabled by each board's device tree.
+		 */
+		framebuffer0: framebuffer@fac00000 {
+			compatible = "simple-framebuffer";
+			reg = <0x0 0xfac00000 0x02000000>;
+			format = "a8r8g8b8";
+			status = "disabled";
+		};
 	};
 
 	cpus {
@@ -185,6 +200,17 @@
 			reg = <0 0xfd3ff000 0x400000>;
 			console-size = <0x200000>;
 			pmsg-size = <0x200000>;
+		};
+
+		/*
+		 * Bootloader splash / continuous-splash framebuffer.  Reserved
+		 * so the kernel does not reuse it as RAM; consumed by the
+		 * simple-framebuffer node under /chosen.  Sized to cover the
+		 * largest panel of any board in this family.
+		 */
+		cont_splash_reserved: framebuffer@fac00000 {
+			reg = <0x0 0xfac00000 0x02000000>;
+			no-map;
 		};
 	};
 

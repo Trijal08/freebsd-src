@@ -13,3 +13,10 @@
 	model = "Google Pixel 9 Pro Fold (comet)";
 	compatible = "google,comet", "google,zumapro-comet", "google,zumapro";
 };
+
+&framebuffer0 {
+	width = <2076>;
+	height = <2152>;
+	stride = <(2076 * 4)>;
+	status = "okay";
+};

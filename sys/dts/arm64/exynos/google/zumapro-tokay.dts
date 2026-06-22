@@ -13,3 +13,10 @@
 	model = "Google Pixel 9 (tokay)";
 	compatible = "google,tokay", "google,zumapro-tokay", "google,zumapro";
 };
+
+&framebuffer0 {
+	width = <1080>;
+	height = <2424>;
+	stride = <(1080 * 4)>;
+	status = "okay";
+};

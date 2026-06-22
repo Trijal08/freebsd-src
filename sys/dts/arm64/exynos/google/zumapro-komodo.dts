@@ -13,3 +13,10 @@
 	model = "Google Pixel 9 Pro XL (komodo)";
 	compatible = "google,komodo", "google,zumapro-komodo", "google,zumapro";
 };
+
+&framebuffer0 {
+	width = <1344>;
+	height = <2992>;
+	stride = <(1344 * 4)>;
+	status = "okay";
+};

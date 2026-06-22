@@ -13,3 +13,10 @@
 	model = "Google Pixel 9 Pro (caiman)";
 	compatible = "google,caiman", "google,zumapro-caiman", "google,zumapro";
 };
+
+&framebuffer0 {
+	width = <1280>;
+	height = <2856>;
+	stride = <(1280 * 4)>;
+	status = "okay";
+};

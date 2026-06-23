@@ -19,6 +19,18 @@
 	#address-cells = <2>;
 	#size-cells = <1>;
 
+	chosen {
+		/*
+		 * The stock bootloader crashes if /chosen has no "bootargs",
+		 * but the property may be empty.  The Linux cmdline used here
+		 * (earlycon + clk/pd/regulator_ignore_unused) has no FreeBSD
+		 * equivalent: early console is the EARLY_PRINTF kernel option,
+		 * and FreeBSD has no clock/power-domain/regulator driver for
+		 * this SoC, so it never gates those resources to begin with.
+		 */
+		bootargs = "";
+	};
+
 	cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -117,39 +129,55 @@
 	 * Firmware and TrustZone carve-outs.  These must not be used by the
 	 * kernel; they are reserved by the secure firmware and the bootloader.
 	 */
-	reserved-memory {
+	/* Energy/clock tables populated by the bootloader; must be present. */
+	ect {
+	};
+
+	/*
+	 * The stock bootloader inspects and populates these reserved regions
+	 * before handing off, so the names, labels and addresses must match
+	 * what it expects (i.e. the upstream Linux device tree) exactly.
+	 */
+	reserved_memory: reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <1>;
 		ranges;
 
 		gsa_reserved_protected: gsa@90200000 {
-			reg = <0x0 0x90200000 0x003ff000>;
+			reg = <0x0 0x90200000 0x3ff000>;
 			no-map;
 		};
 
-		tpu_fw_reserved: tpu-fw@92e00000 {
+		tpu_fw_reserved_zumapro: tpu_fw@92e00000 {
 			reg = <0x0 0x92e00000 0x01200000>;
 			no-map;
 		};
 
-		aoc_reserved: aoc@94000000 {
+		aoc_reserve: aoc@94000000 {
 			reg = <0x0 0x94000000 0x03000000>;
 			no-map;
 		};
 
-		dss_log_reserved: dss-log@fd3f0000 {
-			reg = <0x0 0xfd3f0000 0x0000e000>;
+		dss_log_reserved: dss_log_reserved@fd3f0000 {
+			reg = <0 0xfd3f0000 0x0000e000>;
 			no-map;
 		};
 
-		debug_kinfo_reserved: debug-kinfo@fd3fe000 {
-			reg = <0x0 0xfd3fe000 0x00001000>;
+		debug_kinfo_reserved: debug_kinfo_reserved@fd3fe000 {
+			reg = <0 0xfd3fe000 0x00001000>;
 			no-map;
 		};
 
-		bldr_log_reserved: bldr-log@fd800000 {
-			reg = <0x0 0xfd800000 0x00100000>;
+		bldr_log_reserved: bldr_log_reserved@fd800000 {
+			reg = <0 0xfd800000 0x00100000>;
 			no-map;
+		};
+
+		pstore: ramoops@fd3ff000 {
+			compatible = "ramoops";
+			reg = <0 0xfd3ff000 0x400000>;
+			console-size = <0x200000>;
+			pmsg-size = <0x200000>;
 		};
 	};
 

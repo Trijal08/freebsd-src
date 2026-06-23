@@ -498,45 +498,69 @@ fdt_foreach_mem_region(fdt_mem_region_cb cb, void *arg)
 {
 	struct mem_region mr;
 	pcell_t reg[FDT_REG_CELLS * FDT_MEM_REGIONS];
+	char type[16];
 	pcell_t *regp;
-	phandle_t memory;
+	phandle_t root, node;
 	int addr_cells, size_cells;
 	int i, reg_len, rv, tuple_size, tuples;
+	bool found;
 
-	memory = OF_finddevice("/memory");
-	if (memory == -1)
+	root = OF_finddevice("/");
+	if (root == -1)
 		return (ENXIO);
 
-	if ((rv = fdt_addrsize_cells(OF_parent(memory), &addr_cells,
-	    &size_cells)) != 0)
+	/* Memory nodes are children of root, so use its cell counts. */
+	if ((rv = fdt_addrsize_cells(root, &addr_cells, &size_cells)) != 0)
 		return (rv);
 
 	if (addr_cells > 2)
 		return (ERANGE);
 
 	tuple_size = sizeof(pcell_t) * (addr_cells + size_cells);
-	reg_len = OF_getproplen(memory, "reg");
-	if (reg_len <= 0 || reg_len > sizeof(reg))
-		return (ERANGE);
 
-	if (OF_getprop(memory, "reg", reg, reg_len) <= 0)
-		return (ENXIO);
+	/*
+	 * RAM may be described either as a single /memory node with several
+	 * "reg" tuples or as multiple memory@... sibling nodes; bootloaders
+	 * that hand off with the kernel already loaded commonly use the
+	 * latter.  Walk every node with device_type "memory" and report all of
+	 * them, the same way other operating systems do -- looking at only the
+	 * first node would miss the bank the kernel was loaded into.
+	 */
+	found = false;
+	for (node = OF_child(root); node != 0; node = OF_peer(node)) {
+		if (OF_getprop(node, "device_type", type, sizeof(type)) <= 0)
+			continue;
+		type[sizeof(type) - 1] = '\0';
+		if (strcmp(type, "memory") != 0)
+			continue;
 
-	tuples = reg_len / tuple_size;
-	regp = (pcell_t *)&reg;
-	for (i = 0; i < tuples; i++) {
+		reg_len = OF_getproplen(node, "reg");
+		if (reg_len <= 0 || reg_len > sizeof(reg))
+			return (ERANGE);
 
-		memset(&mr, 0, sizeof(mr));
-		rv = fdt_data_to_res(regp, addr_cells, size_cells,
-			(u_long *)&mr.mr_start, (u_long *)&mr.mr_size);
+		if (OF_getprop(node, "reg", reg, reg_len) <= 0)
+			return (ENXIO);
 
-		if (rv != 0)
-			return (rv);
+		tuples = reg_len / tuple_size;
+		regp = (pcell_t *)&reg;
+		for (i = 0; i < tuples; i++) {
 
-		cb(&mr, arg);
+			memset(&mr, 0, sizeof(mr));
+			rv = fdt_data_to_res(regp, addr_cells, size_cells,
+				(u_long *)&mr.mr_start, (u_long *)&mr.mr_size);
 
-		regp += addr_cells + size_cells;
+			if (rv != 0)
+				return (rv);
+
+			cb(&mr, arg);
+
+			regp += addr_cells + size_cells;
+		}
+		found = true;
 	}
+
+	if (!found)
+		return (ENXIO);
 
 	return (0);
 }

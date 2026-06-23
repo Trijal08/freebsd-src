@@ -169,15 +169,7 @@ function write_v8booti() {
 	write_le32(0)                         # code1
 	write_le64(0)                         # text_offset
 	write_le64(gEndOff)                   # image_size
-	# flags (per arm64 Documentation/arch/arm64/booting.rst):
-	#   bit 0      = endianness (0 = little-endian)
-	#   bits 1-2   = page size  (1 = 4K, 2 = 16K, 3 = 64K)
-	#   bit 3      = 2MB-aligned image placement anywhere in physical RAM
-	# FreeBSD/arm64 always uses 4K pages.  The page-size field must be
-	# non-zero: some bootloaders (e.g. stock Android boot on Exynos/Tensor
-	# phones) reject an image that leaves it "unspecified".  So set
-	# (4K << 1) | (placement << 3) = 0xa rather than just 0x8.
-	write_le64(hexstr_to_num("a"))        # flags (4K pages | placement)
+	write_le64(hexstr_to_num("8"))        # flags
 	write_le64(0)                         # res1[0]
 	write_le64(0)                         # res1[1]
 	write_le64(0)                         # res1[2]

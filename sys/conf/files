@@ -2493,6 +2493,7 @@ dev/mmc/mmc_helpers.c		optional mmc gpio regulator clk | mmccam gpio regulator c
 dev/mmc/mmc_pwrseq.c		optional mmc clk regulator fdt | mmccam clk regulator fdt
 dev/mmc/mmc_pwrseq_if.m		optional mmc clk regulator fdt | mmccam clk regulator fdt
 dev/mmcnull/mmcnull.c		optional mmcnull
+dev/mmio_init/mmio_init.c	optional mmio_init fdt
 dev/mpr/mpr.c			optional mpr
 dev/mpr/mpr_config.c		optional mpr
 # XXX Work around clang warning, until maintainer approves fix.

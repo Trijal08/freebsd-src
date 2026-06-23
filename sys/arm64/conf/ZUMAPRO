@@ -67,6 +67,14 @@ options 	FUSEFS			# FUSE userspace filesystems
 device		dwc3			# Synopsys DesignWare USB3 controller
 
 #
+# One-shot MMIO initializer.  Applies the device-tree "linux,mmio-init-helper"
+# register writes early in boot, before the console and framebuffer come up.
+# On zumapro this sets the DECON display autorefresh bit so the bootloader
+# framebuffer keeps scanning out with no gap.
+#
+options 	MMIO_INIT
+
+#
 # Not yet supported on FreeBSD for this SoC, and therefore intentionally
 # absent (present in the Linux defconfig): the Samsung CMU clock and
 # pinctrl drivers, the USI serial bus, the S2MPG PMIC/regulators, the

@@ -27,6 +27,7 @@
 
 #include "opt_acpi.h"
 #include "opt_kstack_pages.h"
+#include "opt_mmio_init.h"
 #include "opt_platform.h"
 #include "opt_ddb.h"
 
@@ -102,6 +103,10 @@
 #ifdef FDT
 #include <dev/fdt/fdt_common.h>
 #include <dev/ofw/openfirm.h>
+#endif
+
+#if defined(MMIO_INIT) && defined(FDT)
+#include <dev/mmio_init/mmio_init.h>
 #endif
 
 #include <dev/psci/psci.h>
@@ -894,6 +899,16 @@ initarm(struct arm64_bootparams *abp)
 
 	psci_init(NULL);
 	arm64_rsi_setup_memory();
+
+#if defined(MMIO_INIT) && defined(FDT)
+	/*
+	 * Apply device-tree "linux,mmio-init-helper" register writes before
+	 * the console and simple-framebuffer come up, so display state left
+	 * running by the bootloader (e.g. the DECON autorefresh bit) is set
+	 * with no visible gap.
+	 */
+	mmio_init_early();
+#endif
 
 	cninit();
 	set_ttbr0(abp->kern_ttbr0);

@@ -183,6 +183,7 @@ MD_ROOT_SIZE	opt_md.h
 MD_ROOT_MEM	opt_md.h
 MFI_DEBUG	opt_mfi.h
 MFI_DECODE_LOG	opt_mfi.h
+MMIO_INIT	opt_mmio_init.h
 MPROF_BUFFERS	opt_mprof.h
 MPROF_HASH_SIZE	opt_mprof.h
 NO_ADAPTIVE_MUTEXES	opt_adaptive_mutexes.h

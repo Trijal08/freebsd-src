@@ -257,5 +257,17 @@
 			reg = <0x19470030 0x4>;
 			value = <0x3061>;
 		};
+
+		/*
+		 * Power Management Unit register block, exposed as a syscon so
+		 * the watchdog (and later reboot/poweroff) can reach the PMU
+		 * reset controls.  FreeBSD's generic syscon driver binds on the
+		 * "syscon" compatible; no PMU-specific driver, clock or USI is
+		 * needed.
+		 */
+		pmu_system_controller: system-controller@15460000 {
+			compatible = "google,gs101-pmu", "syscon";
+			reg = <0x15460000 0x10000>;
+		};
 	};
 };

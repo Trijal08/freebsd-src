@@ -69,6 +69,14 @@ mmio_init_node(phandle_t node)
 	if (ofw_reg_to_paddr(node, 0, &pa, &size, NULL) != 0)
 		return;
 
+	/*
+	 * This runs in initarm() before the VM system (and thus the kernel
+	 * vmem arena) is initialised, so the early pmap_mapdev() bump
+	 * allocator is used.  Do NOT pmap_unmapdev() here: that frees the KVA
+	 * via the kernel vmem arena, which does not exist yet, and panics with
+	 * a NULL spin mutex.  The single device-register mapping is left in
+	 * place, exactly as the early simple-framebuffer console does.
+	 */
 	va = pmap_mapdev(pa, size);
 	if (va == NULL)
 		return;
@@ -80,8 +88,6 @@ mmio_init_node(phandle_t node)
 	} else {
 		*va = value;
 	}
-
-	pmap_unmapdev(__DEVOLATILE(void *, va), size);
 }
 
 static void

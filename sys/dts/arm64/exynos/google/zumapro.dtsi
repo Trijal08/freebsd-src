@@ -269,5 +269,24 @@
 			compatible = "google,gs101-pmu", "syscon";
 			reg = <0x15460000 0x10000>;
 		};
+
+		/*
+		 * CPU cluster watchdogs.  Placed after the PMU node so the
+		 * syscon they reference attaches first (all bind in the same
+		 * bus pass, in device-tree order).
+		 */
+		watchdog_cl0: watchdog@10060000 {
+			compatible = "google,gs101-wdt";
+			reg = <0x10060000 0x100>;
+			samsung,syscon-phandle = <&pmu_system_controller>;
+			samsung,cluster-index = <0>;
+		};
+
+		watchdog_cl1: watchdog@10070000 {
+			compatible = "google,gs101-wdt";
+			reg = <0x10070000 0x100>;
+			samsung,syscon-phandle = <&pmu_system_controller>;
+			samsung,cluster-index = <1>;
+		};
 	};
 };

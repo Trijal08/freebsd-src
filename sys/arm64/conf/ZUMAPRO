@@ -75,6 +75,12 @@ device		dwc3			# Synopsys DesignWare USB3 controller
 options 	MMIO_INIT
 
 #
+# Watchdog timer (google,gs101-wdt).  Uses the PMU syscon for its reset
+# gating and provides watchdog(9).
+#
+device		exynos_wdt
+
+#
 # Not yet supported on FreeBSD for this SoC, and therefore intentionally
 # absent (present in the Linux defconfig): the Samsung CMU clock and
 # pinctrl drivers, the USI serial bus, the S2MPG PMIC/regulators, the

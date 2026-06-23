@@ -47,9 +47,19 @@
 #include <dev/ofw/openfirm.h>
 #include <dev/ofw/ofw_bus.h>
 #include <dev/ofw/ofw_bus_subr.h>
-#include <dev/syscon/syscon.h>
+#include <dev/ofw/ofw_subr.h>
 
-#include "syscon_if.h"
+#include <dev/psci/smccc.h>
+
+/*
+ * On gs101 the PMU registers are protected: reads are plain MMIO, but
+ * writes have to go through a secure monitor call -- a direct store faults
+ * with an SError.  This is the SMC the EL3 firmware implements (matching the
+ * Linux gs101-pmu driver); TENSOR_PMUREG_RMW asks it to read-modify-write a
+ * register so no separate read is needed here.
+ */
+#define	TENSOR_SMC_PMU_SEC_REG	0x82000504
+#define	TENSOR_PMUREG_RMW	2
 
 /* Watchdog registers. */
 #define	WTCON			0x00
@@ -97,7 +107,7 @@ static const struct exynos_wdt_cluster gs101_clusters[] = {
 struct exynos_wdt_softc {
 	device_t			dev;
 	struct resource			*res;
-	struct syscon			*pmu;
+	uint64_t			pmu_phys;
 	const struct exynos_wdt_cluster	*cl;
 	struct mtx			mtx;
 };
@@ -116,14 +126,24 @@ static struct ofw_compat_data compat_data[] = {
  * starts the counter.
  */
 static void
+exynos_wdt_pmu_rmw(struct exynos_wdt_softc *sc, bus_size_t reg, uint32_t mask,
+    uint32_t val)
+{
+	struct arm_smccc_res res;
+
+	arm_smccc_smc(TENSOR_SMC_PMU_SEC_REG, sc->pmu_phys + reg,
+	    TENSOR_PMUREG_RMW, mask, val, 0, 0, 0, &res);
+}
+
+static void
 exynos_wdt_pmu(struct exynos_wdt_softc *sc, bool enable)
 {
 	const struct exynos_wdt_cluster *cl = sc->cl;
 
 	/* Unmask the reset, then enable the counter (or the reverse). */
-	SYSCON_MODIFY_4(sc->pmu, cl->mask_reset_reg, cl->mask_bit,
+	exynos_wdt_pmu_rmw(sc, cl->mask_reset_reg, cl->mask_bit,
 	    enable ? cl->mask_bit : 0);
-	SYSCON_MODIFY_4(sc->pmu, cl->cnt_en_reg, cl->cnt_en_bit,
+	exynos_wdt_pmu_rmw(sc, cl->cnt_en_reg, cl->cnt_en_bit,
 	    enable ? cl->cnt_en_bit : 0);
 }
 
@@ -200,7 +220,10 @@ static int
 exynos_wdt_attach(device_t dev)
 {
 	struct exynos_wdt_softc *sc;
-	phandle_t node;
+	phandle_t node, pmu_node;
+	bus_addr_t pa;
+	bus_size_t size;
+	pcell_t xref;
 	uint32_t cluster;
 	int rid;
 
@@ -216,17 +239,20 @@ exynos_wdt_attach(device_t dev)
 	}
 	sc->cl = &gs101_clusters[cluster];
 
+	/* Resolve the PMU physical base; its writes go through the SMC. */
+	if (OF_getencprop(node, "samsung,syscon-phandle", &xref,
+	    sizeof(xref)) <= 0 ||
+	    (pmu_node = OF_node_from_xref(xref)) == 0 ||
+	    ofw_reg_to_paddr(pmu_node, 0, &pa, &size, NULL) != 0) {
+		device_printf(dev, "could not resolve PMU base\n");
+		return (ENXIO);
+	}
+	sc->pmu_phys = pa;
+
 	rid = 0;
 	sc->res = bus_alloc_resource_any(dev, SYS_RES_MEMORY, &rid, RF_ACTIVE);
 	if (sc->res == NULL) {
 		device_printf(dev, "could not allocate memory resource\n");
-		return (ENXIO);
-	}
-
-	if (syscon_get_by_ofw_property(dev, node,
-	    "samsung,syscon-phandle", &sc->pmu) != 0) {
-		device_printf(dev, "could not get PMU syscon\n");
-		bus_release_resource(dev, SYS_RES_MEMORY, rid, sc->res);
 		return (ENXIO);
 	}
 

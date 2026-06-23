@@ -25,14 +25,16 @@
 
 	chosen {
 		/*
-		 * The stock bootloader crashes if /chosen has no "bootargs",
-		 * but the property may be empty.  The Linux cmdline used here
-		 * (earlycon + clk/pd/regulator_ignore_unused) has no FreeBSD
-		 * equivalent: early console is the EARLY_PRINTF kernel option,
-		 * and FreeBSD has no clock/power-domain/regulator driver for
-		 * this SoC, so it never gates those resources to begin with.
+		 * The stock bootloader crashes if /chosen has no "bootargs".
+		 * FreeBSD only parses bootargs beginning with the "FreeBSD:"
+		 * guard -- this is exactly how it ignores Linux-style args --
+		 * and treats the remainder as boot flags.  "-D" sets
+		 * RB_MULTIPLE so every probed console stays active; otherwise
+		 * the vt_simplefb framebuffer (CN_INTERNAL) outranks and
+		 * silences the serial console once cninit() picks one best
+		 * console.
 		 */
-		bootargs = "";
+		bootargs = "FreeBSD:-D";
 		stdout-path = "serial0:115200n8";
 	};
 

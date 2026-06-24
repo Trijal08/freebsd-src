@@ -88,9 +88,17 @@ options 	MMIO_INIT
 device		exynos_wdt
 
 #
+# Volume and power buttons via gpiokeys(4), on the ALIVE pin controller's
+# wakeup-EINT GPIOs.  The Samsung CMU clock driver and the Exynos pin
+# controller (with its GPIO interrupt support) are pulled in automatically
+# by SOC_GOOGLE_ZUMAPRO; gpio, fdt_pinctrl and evdev come from std.dev.
+#
+device		gpiokeys
+
+#
 # Not yet supported on FreeBSD for this SoC, and therefore intentionally
-# absent (present in the Linux defconfig): the Samsung CMU clock and
-# pinctrl drivers, the USI serial bus, the S2MPG PMIC/regulators, the
-# Exynos UFS host and PHY, the Exynos DRM/DECON display pipeline, the Mali
-# (Panthor) GPU, the System MMU (IOMMU), and ACPM/SCMI power management.
+# absent (present in the Linux defconfig): the USI serial bus, the S2MPG
+# PMIC/regulators, the Exynos UFS host and PHY, the Exynos DRM/DECON display
+# pipeline, the Mali (Panthor) GPU, the System MMU (IOMMU), and ACPM/SCMI
+# power management.
 #

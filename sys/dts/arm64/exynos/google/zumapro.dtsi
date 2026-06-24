@@ -12,6 +12,8 @@
  */
 
 #include <dt-bindings/clock/google,zuma.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/linux-event-codes.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 
 / {
@@ -183,6 +185,34 @@
 		#clock-cells = <0>;
 		clock-frequency = <26000000>;
 		clock-output-names = "ext-26m";
+	};
+
+	/*
+	 * Volume and power buttons.  These are wakeup-EINT GPIOs on the ALIVE
+	 * pin controller; the exynos_pinctrl driver presents each as a GPIO
+	 * interrupt backed by the pin's dedicated GIC SPI, and gpiokeys(4)
+	 * turns edge events into key presses.
+	 */
+	gpio_keys: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-vol-down {
+			label = "KEY_VOLUMEDOWN";
+			linux,code = <KEY_VOLUMEDOWN>;
+			gpios = <&gpa4 1 GPIO_ACTIVE_LOW>;
+		};
+
+		button-vol-up {
+			label = "KEY_VOLUMEUP";
+			linux,code = <KEY_VOLUMEUP>;
+			gpios = <&gpa6 2 GPIO_ACTIVE_LOW>;
+		};
+
+		button-power {
+			label = "KEY_POWER";
+			linux,code = <KEY_POWER>;
+			gpios = <&gpa4 0 GPIO_ACTIVE_LOW>;
+		};
 	};
 
 	/*

@@ -21,6 +21,19 @@
 	#size-cells = <1>;
 
 	aliases {
+		pinctrl0 = &pinctrl_gpio_alive;
+		pinctrl1 = &pinctrl_gpio_custom_alive;
+		pinctrl2 = &pinctrl_far_alive;
+		pinctrl3 = &pinctrl_gsacore0;
+		pinctrl4 = &pinctrl_gsacore1;
+		pinctrl5 = &pinctrl_gsacore2;
+		pinctrl6 = &pinctrl_gsacore3;
+		pinctrl7 = &pinctrl_gsactrl;
+		pinctrl8 = &pinctrl_hsi1;
+		pinctrl9 = &pinctrl_hsi2;
+		pinctrl10 = &pinctrl_hsi2ufs;
+		pinctrl11 = &pinctrl_peric0;
+		pinctrl12 = &pinctrl_peric1;
 		serial0 = &serial_0;
 	};
 
@@ -403,5 +416,140 @@
 				 <&cmu_top CLK_DOUT_CMU_PERIC1_IP>;
 			clock-names = "oscclk", "bus", "ip";
 		};
+
+		/*
+		 * Pin controllers.  Each controller owns a set of GPIO banks
+		 * (defined in the exynos_pinctrl driver) whose pin-mux and
+		 * GPIO subnodes are added in zumapro-pinctrl.dtsi.  The
+		 * wakeup-interrupt-controller subnodes describe the external
+		 * interrupt path, which the driver does not implement yet.
+		 */
+		pinctrl_gpio_alive: pinctrl@154d0000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x154d0000 0x00001000>;
+			clocks = <&cmu_apm CLK_GOUT_APM_APBIF_GPIO_ALIVE_PCLK>;
+			clock-names = "pclk";
+
+			wakeup-interrupt-controller {
+				compatible = "google,zuma-wakeup-eint",
+					     "google,gs101-wakeup-eint",
+					     "samsung,exynos850-wakeup-eint",
+					     "samsung,exynos7-wakeup-eint";
+			};
+		};
+
+		pinctrl_gpio_custom_alive: pinctrl@15060000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x15060000 0x00001000>;
+			clocks = <&cmu_apm CLK_GOUT_APM_APBIF_GPIO_ALIVE_PCLK>;
+			clock-names = "pclk";
+
+			wakeup-interrupt-controller {
+				compatible = "google,zuma-wakeup-eint",
+					     "google,gs101-wakeup-eint",
+					     "samsung,exynos850-wakeup-eint",
+					     "samsung,exynos7-wakeup-eint";
+			};
+		};
+
+		pinctrl_far_alive: pinctrl@154e0000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x154e0000 0x00001000>;
+			clocks = <&cmu_apm CLK_GOUT_APM_APBIF_GPIO_FAR_ALIVE_PCLK>;
+			clock-names = "pclk";
+
+			wakeup-interrupt-controller {
+				compatible = "google,zuma-wakeup-eint",
+					     "samsung,exynos850-wakeup-eint",
+					     "samsung,exynos7-wakeup-eint";
+			};
+		};
+
+		pinctrl_gsacore0: pinctrl@16280000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x16280000 0x00001000>;
+			/* TODO: update once support for this CMU exists */
+			clocks = <0>;
+			clock-names = "pclk";
+			status = "disabled";
+		};
+
+		pinctrl_gsacore1: pinctrl@16290000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x16290000 0x00001000>;
+			/* TODO: update once support for this CMU exists */
+			clocks = <0>;
+			clock-names = "pclk";
+			status = "disabled";
+		};
+
+		pinctrl_gsacore2: pinctrl@162a0000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x162a0000 0x00001000>;
+			/* TODO: update once support for this CMU exists */
+			clocks = <0>;
+			clock-names = "pclk";
+			status = "disabled";
+		};
+
+		pinctrl_gsacore3: pinctrl@162b0000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x162b0000 0x00001000>;
+			/* TODO: update once support for this CMU exists */
+			clocks = <0>;
+			clock-names = "pclk";
+			status = "disabled";
+		};
+
+		pinctrl_gsactrl: pinctrl@16140000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x16140000 0x00001000>;
+			/* TODO: update once support for this CMU exists */
+			clocks = <0>;
+			clock-names = "pclk";
+		};
+
+		pinctrl_hsi1: pinctrl@12040000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x12040000 0x00001000>;
+			/* TODO: update once support for this CMU exists */
+			clocks = <0>;
+			clock-names = "pclk";
+			interrupts = <GIC_SPI 413 IRQ_TYPE_LEVEL_HIGH 0>;
+		};
+
+		pinctrl_hsi2: pinctrl@13040000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x13040000 0x00001000>;
+			clocks = <&cmu_hsi2 CLK_GOUT_HSI2_GPIO_HSI2_PCLK>;
+			clock-names = "pclk";
+			interrupts = <GIC_SPI 432 IRQ_TYPE_LEVEL_HIGH 0>;
+		};
+
+		pinctrl_hsi2ufs: pinctrl@13060000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x13060000 0x00001000>;
+			clocks = <&cmu_hsi2 CLK_GOUT_HSI2_GPIO_HSI2_PCLK>;
+			clock-names = "pclk";
+			interrupts = <GIC_SPI 433 IRQ_TYPE_LEVEL_HIGH 0>;
+		};
+
+		pinctrl_peric0: pinctrl@10840000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x10840000 0x00001000>;
+			clocks = <&cmu_peric0 CLK_GOUT_PERIC0_GPIO_PERIC0_PCLK>;
+			clock-names = "pclk";
+			interrupts = <GIC_SPI 634 IRQ_TYPE_LEVEL_HIGH 0>;
+		};
+
+		pinctrl_peric1: pinctrl@10c40000 {
+			compatible = "google,zuma-pinctrl";
+			reg = <0x10c40000 0x00001000>;
+			clocks = <&cmu_peric1 CLK_GOUT_PERIC1_GPIO_PERIC1_PCLK>;
+			clock-names = "pclk";
+			interrupts = <GIC_SPI 649 IRQ_TYPE_LEVEL_HIGH 0>;
+		};
 	};
 };
+
+#include "zumapro-pinctrl.dtsi"

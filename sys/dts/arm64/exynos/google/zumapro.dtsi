@@ -11,6 +11,7 @@
  * Copyright 2025 Trijal Saha <trijalsaha2012@gmail.com>
  */
 
+#include <dt-bindings/clock/google,zuma.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 
 / {
@@ -145,6 +146,30 @@
 		    <GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW) 0>,
 		    <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW) 0>,
 		    <GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW) 0>;
+	};
+
+	/*
+	 * Reference oscillators.  The CMU clock controllers below take "oscclk"
+	 * from ext_24_5m; its rate is the root of the whole clock tree.
+	 */
+	/*
+	 * No clock-output-names: the FreeBSD fixed-clock driver would register
+	 * it under that global name and collide with the "oscclk" node the
+	 * exynos_clk driver registers internally.  The CMUs still reach this
+	 * oscillator through their "oscclk" clock-names input (by phandle), so
+	 * the rate is read from here while the global "oscclk" stays unique.
+	 */
+	ext_24_5m: clock-oscclk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <24576000>;
+	};
+
+	ext_26m: clock-ext26m {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <26000000>;
+		clock-output-names = "ext-26m";
 	};
 
 	/*
@@ -287,6 +312,96 @@
 			reg = <0x10070000 0x100>;
 			samsung,syscon-phandle = <&pmu_system_controller>;
 			samsung,cluster-index = <1>;
+		};
+
+		/*
+		 * Clock Management Units.  CMU_TOP is the root of the clock
+		 * tree; the other domains take their bus clocks from it.  The
+		 * FreeBSD exynos_clk driver brings CMU_TOP up at an earlier bus
+		 * pass so its outputs are registered before the leaf domains
+		 * resolve them by name.  The samsung,sysreg phandles used by
+		 * Linux for dynamic root-clock gating are omitted; that path is
+		 * not implemented and the clocks are left as firmware set them.
+		 */
+		cmu_top: clock-controller@26040000 {
+			compatible = "google,zuma-cmu-top";
+			reg = <0x26040000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&ext_24_5m>;
+			clock-names = "oscclk";
+		};
+
+		cmu_apm: clock-controller@15400000 {
+			compatible = "google,zuma-cmu-apm";
+			reg = <0x15400000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&ext_24_5m>;
+			clock-names = "oscclk";
+		};
+
+		cmu_misc: clock-controller@10010000 {
+			compatible = "google,zuma-cmu-misc";
+			reg = <0x10010000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&ext_24_5m>,
+				 <&cmu_top CLK_DOUT_CMU_MISC_BUS>,
+				 <&cmu_top CLK_DOUT_CMU_MISC_SSS>;
+			clock-names = "oscclk", "bus", "sss";
+		};
+
+		cmu_dpu: clock-controller@19400000 {
+			compatible = "google,zuma-cmu-dpu";
+			reg = <0x19400000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&ext_26m>,
+				 <&cmu_top CLK_DOUT_CMU_DPU_BUS>,
+				 <&cmu_top CLK_DOUT_CMU_SHARED0_DIV4>;
+			clock-names = "oscclk", "bus", "dsim";
+		};
+
+		cmu_hsi0: clock-controller@11000000 {
+			compatible = "google,zuma-cmu-hsi0";
+			reg = <0x11000000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&ext_24_5m>,
+				 <&cmu_top CLK_DOUT_CMU_HSI0_BUS>,
+				 <&cmu_top CLK_DOUT_CMU_HSI0_DPGTC>,
+				 <&cmu_top CLK_DOUT_CMU_HSI0_USB31DRD>,
+				 <&cmu_top CLK_DOUT_CMU_HSI0_USBDPDBG>;
+			clock-names = "oscclk", "bus", "dpgtc", "usb31drd",
+				      "usbdpdbg";
+		};
+
+		cmu_hsi2: clock-controller@13000000 {
+			compatible = "google,zuma-cmu-hsi2";
+			reg = <0x13000000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&ext_24_5m>,
+				 <&cmu_top CLK_DOUT_CMU_HSI2_BUS>,
+				 <&cmu_top CLK_DOUT_CMU_HSI2_PCIE>,
+				 <&cmu_top CLK_DOUT_CMU_HSI2_UFS_EMBD>,
+				 <&cmu_top CLK_DOUT_CMU_HSI2_MMC_CARD>;
+			clock-names = "oscclk", "bus", "pcie", "ufs", "mmc";
+		};
+
+		cmu_peric0: clock-controller@10800000 {
+			compatible = "google,zuma-cmu-peric0";
+			reg = <0x10800000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&ext_24_5m>,
+				 <&cmu_top CLK_DOUT_CMU_PERIC0_BUS>,
+				 <&cmu_top CLK_DOUT_CMU_PERIC0_IP>;
+			clock-names = "oscclk", "bus", "ip";
+		};
+
+		cmu_peric1: clock-controller@10c00000 {
+			compatible = "google,zuma-cmu-peric1";
+			reg = <0x10c00000 0x10000>;
+			#clock-cells = <1>;
+			clocks = <&ext_24_5m>,
+				 <&cmu_top CLK_DOUT_CMU_PERIC1_BUS>,
+				 <&cmu_top CLK_DOUT_CMU_PERIC1_IP>;
+			clock-names = "oscclk", "bus", "ip";
 		};
 	};
 };

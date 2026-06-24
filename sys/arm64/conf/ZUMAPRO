@@ -96,6 +96,22 @@ device		exynos_wdt
 device		gpiokeys
 
 #
+# Embedded DOOM ramdisk.  An ext2 root image (built by
+# ../../../../doom-fb/build.sh with mke2fs) is linked into the kernel and
+# mounted as the root filesystem; its /sbin/init runs DOOM on /dev/fb0 with
+# the volume/power buttons.  ext2fs is used (not tarfs) because the embedded
+# image appears as the md(4) character device /dev/md0, which ext2fs reads via
+# the buffer cache -- tarfs only mounts a regular file.  MD_ROOT and TMPFS
+# come from std.arm64; the image is read-only so init mounts a tmpfs for
+# DOOM's writable state.  MD_ROOT_SIZE is in KiB and must exceed the image
+# (rootfs.ext2 is 45 MiB).
+#
+options 	EXT2FS			# ext2/3/4 filesystem
+options 	MD_ROOT_SIZE=49152
+options 	MD_ROOT_FSTYPE=\"ext2fs\"
+makeoptions	MFS_IMAGE=/home/trijal/Builds/doom-fb/rootfs.ext2
+
+#
 # Not yet supported on FreeBSD for this SoC, and therefore intentionally
 # absent (present in the Linux defconfig): the USI serial bus, the S2MPG
 # PMIC/regulators, the Exynos UFS host and PHY, the Exynos DRM/DECON display

@@ -209,10 +209,32 @@ vt_simplefb_init(struct vt_device *vd)
 	    size, VM_MEMATTR_WRITE_COMBINING);
 	sc->fb_size = size;
 
+	/* Map the framebuffer write-combining for userland /dev/fb0 mmap too. */
+	sc->fb_flags |= FB_FLAG_MEMATTR;
+	sc->fb_memattr = VM_MEMATTR_WRITE_COMBINING;
+
 	vt_fb_init(vd);
 
 	return (CN_INTERNAL);
 }
+
+/*
+ * Once devfs is available, publish the simplefb framebuffer as /dev/fb0 so
+ * userland can mmap the pixels (the vt(9) console keeps using the same
+ * framebuffer; whoever draws last wins).  vt_simplefb_init() runs as the
+ * early console, long before make_dev() works, so this is deferred to a
+ * SYSINIT.  local_info.fb_size is non-zero only if simplefb is the console.
+ */
+static void
+vt_simplefb_register_fbd(void *arg __unused)
+{
+
+	if (local_info.fb_size == 0)
+		return;
+	fbd_register_dev(&local_info);
+}
+SYSINIT(vt_simplefb_fbd, SI_SUB_CONFIGURE, SI_ORDER_ANY,
+    vt_simplefb_register_fbd, NULL);
 
 static void
 vt_simplefb_fini(struct vt_device *vd, void *softc)

@@ -226,28 +226,41 @@ fbd_find(struct fb_info* info)
 	return (NULL);
 }
 
+/*
+ * Create the /dev/fbN character device for a framebuffer without touching the
+ * vt(9) console.  This is for framebuffers whose console is already brought up
+ * by another path (e.g. the vt_simplefb early console), which only need the
+ * userland /dev/fb device, not a second vt attach.
+ */
 int
-fbd_register(struct fb_info* info)
+fbd_register_dev(struct fb_info *info)
 {
 	struct fb_list_entry *entry;
-	int err, first;
 
-	first = 0;
-	if (LIST_EMPTY(&fb_list_head))
-		first++;
-
-	entry = fbd_find(info);
-	if (entry != NULL) {
-		/* XXX Update framebuffer params */
+	if (fbd_find(info) != NULL)
 		return (0);
-	}
 
 	entry = malloc(sizeof(struct fb_list_entry), M_DEVBUF, M_WAITOK|M_ZERO);
 	entry->fb_info = info;
 
 	LIST_INSERT_HEAD(&fb_list_head, entry, fb_list);
 
-	err = fb_init(entry, framebuffer_dev_unit++);
+	return (fb_init(entry, framebuffer_dev_unit++));
+}
+
+int
+fbd_register(struct fb_info* info)
+{
+	int err, first;
+
+	first = LIST_EMPTY(&fb_list_head);
+
+	if (fbd_find(info) != NULL) {
+		/* XXX Update framebuffer params */
+		return (0);
+	}
+
+	err = fbd_register_dev(info);
 	if (err)
 		return (err);
 

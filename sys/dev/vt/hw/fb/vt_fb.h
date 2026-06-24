@@ -36,6 +36,13 @@ void vt_fb_resume(struct vt_device *vd);
 void vt_fb_suspend(struct vt_device *vd);
 int vt_fb_detach(struct fb_info *info);
 
+/*
+ * Publish a framebuffer as /dev/fbN only (no vt(9) console attach), for
+ * consoles already brought up by another path such as vt_simplefb.
+ * Implemented in dev/fb/fbd.c.
+ */
+int fbd_register_dev(struct fb_info *info);
+
 vd_init_t		vt_fb_init;
 vd_fini_t		vt_fb_fini;
 vd_blank_t		vt_fb_blank;

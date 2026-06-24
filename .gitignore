@@ -40,3 +40,7 @@ tags
 .ccls-cache
 sys/*/compile
 /src.conf
+
+# Object directories
+out/
+obj/
